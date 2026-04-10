@@ -7,6 +7,14 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 import math
 
+
+
+print("----------------")
+print("----------------")
+print("---- PART 1 ----")
+print("----------------")
+print("----------------")
+
 def predict(X, W, b):
     
     predictions = np.dot(X, W) + b
@@ -58,18 +66,18 @@ Y = boston.target
 divide=round(len(X)*0.8)
 
 # Convert DataFrame / Series to NumPy arrays
-train_X_input = X[:divide].to_numpy()       # shape (404, 13)
-train_X_target = Y[:divide].to_numpy()      # shape (404,)
+train_X_input = X[:divide].to_numpy()      
+train_X_target = Y[:divide].to_numpy() 
 
-test_X_input = X[divide:].to_numpy()        # shape (102, 13)
-test_X_target = Y[divide:].to_numpy()       # shape (102,)
+test_X_input = X[divide:].to_numpy()      
+test_X_target = Y[divide:].to_numpy()     
 
 # Convert once, outside everything
-train_X_input = np.array(train_X_input, dtype=float)   # shape (404, 13)
-train_X_target = np.array(train_X_target, dtype=float) # shape (404,)
+train_X_input = np.array(train_X_input, dtype=float)  
+train_X_target = np.array(train_X_target, dtype=float) 
 
-test_X_input = np.array(test_X_input, dtype=float)     # shape (102, 13)
-test_X_target = np.array(test_X_target, dtype=float)   # shape (102,)
+test_X_input = np.array(test_X_input, dtype=float)   
+test_X_target = np.array(test_X_target, dtype=float)  
 
 
 scaler = StandardScaler()
@@ -128,6 +136,10 @@ print("""A learning rate of 0.0001 works well
 """)
 
 
+
+print("-------------")
+print("-----MSE-----")
+print("-------------")
 y_pred = predict(train_X_input, W, b)
 print(f"MSE on Training Data is ",calculate_loss(y_pred,train_X_target))
 
@@ -135,6 +147,10 @@ print(f"MSE on Training Data is ",calculate_loss(y_pred,train_X_target))
 y_pred = predict(test_X_input, W, b)
 print(f"MSE on Test Data is ",calculate_loss(y_pred,test_X_target))
 
+
+print("-------------")
+print("----CHECK----")
+print("-------------")
 correct_count=0
 for i in range(0,len(test_X_input)):
     predicted_value=np.dot(test_X_input[i], W) + b
@@ -145,8 +161,18 @@ for i in range(0,len(test_X_input)):
           print(f"Incorrect Identification ! Predicted: ",round(predicted_value,3)," Actual Target: ",test_X_target[i])
 
 
+
+print("--------------")
+print("---Accuracy---")
+print("--------------")
 print(f"Accuracy: ",correct_count/len(test_X_target))
 print("   ")
+
+
+
+print("------------")
+print("---SCIKIT---")
+print("------------")
 lr_model = LinearRegression()
 lr_model.fit(train_X_input, train_X_target)
 
@@ -156,7 +182,6 @@ sklearn_test_pred = lr_model.predict(test_X_input)
 train_mse_sklearn = mean_squared_error(train_X_target, sklearn_train_pred)
 test_mse_sklearn = mean_squared_error(test_X_target, sklearn_test_pred)
 
-print("--- Scikit-learn Linear Regression ---")
 print(f"Training MSE: {train_mse_sklearn}")
 print(f"Test MSE: {test_mse_sklearn}")
 
