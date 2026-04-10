@@ -5,7 +5,7 @@ from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
-
+from sklearn.model_selection import KFold
 import math
 
 
@@ -75,24 +75,25 @@ Y = Y.map({'M': 1, 'B': 0})
 
 divide=round(len(X)*0.8)
 
-# Convert DataFrame / Series to NumPy arrays
-train_X_input = X[:divide].to_numpy()       # shape (404, 13)
-train_X_target = Y[:divide].to_numpy()      # shape (404,)
+train_X_input = X[:divide].to_numpy()      
+train_X_target = Y[:divide].to_numpy()     
 
-test_X_input = X[divide:].to_numpy()        # shape (102, 13)
-test_X_target = Y[divide:].to_numpy()       # shape (102,)
+test_X_input = X[divide:].to_numpy()     
+test_X_target = Y[divide:].to_numpy()      
 
 # Convert once, outside everything
-train_X_input = np.array(train_X_input, dtype=float)   # shape (404, 13)
-train_X_target = np.array(train_X_target, dtype=float) # shape (404,)
+train_X_input = np.array(train_X_input, dtype=float)  
+train_X_target = np.array(train_X_target, dtype=float) 
 
-test_X_input = np.array(test_X_input, dtype=float)     # shape (102, 13)
-test_X_target = np.array(test_X_target, dtype=float)   # shape (102,)
+test_X_input = np.array(test_X_input, dtype=float)     
+test_X_target = np.array(test_X_target, dtype=float)  
 
 
 
 
 scaler = StandardScaler()
+
+X_scaled = scaler.fit_transform(X)
 train_X_input = scaler.fit_transform(train_X_input)
 test_X_input = scaler.transform(test_X_input)
 
@@ -186,6 +187,70 @@ print(cm)
  
 
 print("------------")
+print("---Kfold---")
+print("------------")
+folds=KFold(n_splits=5,shuffle=True,random_state=42)
+accur=[]
+precis=[]
+recall=[]
+f1s=[]
+for train_index, test_index in folds.split(X):
+
+    X_train = X.iloc[train_index].to_numpy()
+    X_test = X.iloc[test_index].to_numpy()
+
+    y_train = Y.iloc[train_index].to_numpy()
+    y_test = Y.iloc[test_index].to_numpy()
+
+    X_train = np.array(X_train, dtype=float)
+    X_test = np.array(X_test, dtype=float)
+    y_train = np.array(y_train, dtype=float)
+    y_test = np.array(y_test, dtype=float)
+
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+
+    W = np.zeros(X_train.shape[1])
+    b = 0.0
+
+    for i in range(max):
+        Z = predict(X_train, W, b)
+        y_pred = sigmoid(Z)
+
+        dw = derivative_W(y_pred, y_train, X_train)
+        db = derivative_B(y_pred, y_train)
+
+        W_new = update_W(W, 0.001, dw)
+        b_new = update_B(b, 0.001, db)
+
+        if convergence_check(W, W_new):
+            W = W_new
+            b = b_new
+            break
+
+        W = W_new
+        b = b_new
+
+    Z_test = predict(X_test, W, b)
+    y_test_pred = sigmoid(Z_test)
+    y_test_class = (y_test_pred >= 0.5).astype(int)
+
+    accur.append(accuracy_score(y_test, y_test_class))
+    precis.append(precision_score(y_test, y_test_class))
+    recall.append(recall_score(y_test, y_test_class))
+    f1s.append(f1_score(y_test, y_test_class))
+
+print("Average Accuracy:", np.mean(accur))
+print("Average Precision:", np.mean(precis))
+print("Average Recall:", np.mean(recall))
+print("Average F1:", np.mean(f1s))
+
+
+
+
+
+print("------------")
 print("---SCIKIT---")
 print("------------")
 model=LogisticRegression(solver='lbfgs',max_iter=25000)
@@ -203,12 +268,14 @@ print("Precision: ",precision)
 print("F1 Score: ",f1)
 cm = confusion_matrix(test_X_target, y_pred)
 print(cm)
-
+    
 
 
 print("-------------")
 print("----Table----")
 print("-------------")
+Z_test = predict(test_X_input, W, b)
+y_test_pred = sigmoid(Z_test)
 thresholds = [0.3, 0.5, 0.65, 0.8]
 
 print("Threshold | Accuracy | Precision | Recall | F1-Score")
